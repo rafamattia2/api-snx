@@ -1,17 +1,17 @@
-const express = require("express");
-const { sequelize } = require("../models");
-const mongoose = require("mongoose");
+const express = require('express');
+const { sequelize } = require('../app/models');
+const mongoose = require('mongoose');
 const router = express.Router();
 
-router.get("/health", async (req, res) => {
+router.get('/', async (req, res) => {
   let dbStatus = {
-    postgres: "not connected",
-    mongodb: "not connected",
+    postgres: 'not connected',
+    mongodb: 'not connected',
   };
 
   try {
     await sequelize.authenticate();
-    dbStatus.postgres = "healthy";
+    dbStatus.postgres = 'healthy';
   } catch (error) {
     dbStatus.postgres = `error: ${error.message}`;
   }
@@ -25,24 +25,25 @@ router.get("/health", async (req, res) => {
     }
 
     if (mongoose.connection.readyState === 1) {
-      dbStatus.mongodb = "healthy";
+      dbStatus.mongodb = 'healthy';
     } else {
-      dbStatus.mongodb = "error: connection not open";
+      dbStatus.mongodb = 'error: connection not open';
     }
   } catch (error) {
     dbStatus.mongodb = `error: ${error.message}`;
   }
 
-  if (dbStatus.postgres === "healthy" && dbStatus.mongodb === "healthy") {
+  if (dbStatus.postgres === 'healthy' && dbStatus.mongodb === 'healthy') {
     return res.status(200).json({
-      message: "API is up and running",
-      status: "success",
+      message: 'API is up and running',
+      status: 'success',
       databases: dbStatus,
     });
   } else {
     return res.status(500).json({
-      message: "API is running, but there are issues with the database connections",
-      status: "error",
+      message:
+        'API is running, but there are issues with the database connections',
+      status: 'error',
       databases: dbStatus,
     });
   }
