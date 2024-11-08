@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const dotenv = require('dotenv');
+const User = require('./user');
 
 dotenv.config();
 
@@ -22,4 +23,4 @@ const testConnection = async () => {
 
 testConnection();
 
-module.exports = { sequelize, DataTypes };
+module.exports = { sequelize, User, DataTypes };
