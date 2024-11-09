@@ -1,6 +1,6 @@
-const express = require('express');
-const { sequelize } = require('../app/models');
-const mongoose = require('mongoose');
+import express from 'express';
+import { sequelize } from '../app/models/index.js';
+import mongoose from 'mongoose';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -49,4 +49,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

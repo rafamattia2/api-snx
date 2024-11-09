@@ -1,8 +1,10 @@
-const express = require('express');
-const healthRoutes = require('./health');
+import express from 'express';
+import healthRoutes from './health.js';
+import userRoutes from './userRoutes.js';
 
-const router = express.Router();
+const routes = express.Router();
 
-router.use('/health', healthRoutes);
+routes.use('/health', healthRoutes);
+routes.use('/user', userRoutes);
 
-module.exports = router;
+export default routes;

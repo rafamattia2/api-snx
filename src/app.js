@@ -1,5 +1,5 @@
-const express = require('express');
-const routes = require('./routes'); // Importa o arquivo index.js da pasta routes
+import express from 'express';
+import routes from './routes/index.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,4 +11,4 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-module.exports = app;
+export default app;

@@ -1,40 +1,38 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const bcrypt = require('bcryptjs');
-const { sequelize } = require('./index');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-class User extends Model {
-  async comparePassword(password) {
-    return bcrypt.compare(password, this.password);
-  }
-}
-
-User.init(
-  {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
   },
-  {
-    sequelize,
-    modelName: 'User',
-    hooks: {
-      beforeSave: async (user) => {
-        if (user.password) {
-          user.password = await bcrypt.hash(user.password, 10);
-        }
-      },
-    },
-  }
-);
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
 
-module.exports = User;
+const User = mongoose.model('User', userSchema);
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+userSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+export { User, userSchema };

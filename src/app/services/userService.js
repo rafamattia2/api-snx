@@ -1,27 +1,22 @@
-const { User } = require('../models'); // Importando o modelo User
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const authConfig = require('../../configs/auth'); // Importando a configuração de auth
-const dotenv = require('dotenv');
+import { User } from '../models/user.js';
+import jwt from 'jsonwebtoken';
+import authConfig from '../../configs/auth.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 const createUser = async (name, username, password) => {
   try {
-    const existingUser = await User.findOne({ where: { username } });
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
       throw new Error('Username is already taken');
     }
-
-    const user = await User.create({
-      name,
-      username,
-      password,
-    });
+    const user = new User({ name, username, password });
+    await user.save();
 
     return {
       message: 'User created successfully',
-      user: { id: user.id, name: user.name, username: user.username },
+      user: { id: user._id, name: user.name, username: user.username },
     };
   } catch (error) {
     throw new Error(error.message);
@@ -30,7 +25,7 @@ const createUser = async (name, username, password) => {
 
 const loginUser = async (username, password) => {
   try {
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({ username });
 
     if (!user) {
       throw new Error('User not found');
@@ -42,7 +37,7 @@ const loginUser = async (username, password) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user._id, username: user.username },
       authConfig.jwt.secret,
       { expiresIn: authConfig.jwt.expiresIn }
     );
@@ -58,14 +53,14 @@ const loginUser = async (username, password) => {
 
 const getUserById = async (userId) => {
   try {
-    const user = await User.findByPk(userId);
+    const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found');
     }
 
     return {
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         username: user.username,
       },
@@ -75,8 +70,10 @@ const getUserById = async (userId) => {
   }
 };
 
-module.exports = {
+const userService = {
   createUser,
   loginUser,
   getUserById,
 };
+
+export { userService };

@@ -1,6 +1,6 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const dotenv = require('dotenv');
-const User = require('./user');
+import dotenv from 'dotenv';
+import { Sequelize, DataTypes } from 'sequelize';
+import { User } from './user.js';
 
 dotenv.config();
 
@@ -23,4 +23,4 @@ const testConnection = async () => {
 
 testConnection();
 
-module.exports = { sequelize, User, DataTypes };
+export { sequelize, User, DataTypes };
