@@ -3,7 +3,7 @@ import { sequelize } from '../app/models/index.js';
 import mongoose from 'mongoose';
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/health', async (req, res) => {
   let dbStatus = {
     postgres: 'not connected',
     mongodb: 'not connected',

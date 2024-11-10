@@ -3,10 +3,10 @@ import { userController } from '../app/controllers/userController.js';
 import { authMiddleware } from '../app/middlewares/authMiddleware.js';
 const router = express.Router();
 
-router.post('/register', userController.registerUser);
+router.post('/users/register', userController.registerUser);
 
-router.post('/login', userController.loginUser);
+router.post('/users/login', userController.loginUser);
 
-router.get('/:userId', authMiddleware, userController.getUser);
+router.get('/users/:userId', authMiddleware, userController.getUser);
 
 export default router;
