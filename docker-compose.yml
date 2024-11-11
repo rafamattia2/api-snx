@@ -7,19 +7,53 @@ services:
     environment:
       - JWT_SECRET=${JWT_SECRET}
       - MONGO_URI=${MONGO_URI}
-      - POSTGRES_URI=${POSTGRES_URI}
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_DIALECT=${DB_DIALECT}
     depends_on:
-      - mongodb
-      - postgres
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    networks:
+      - app-network
+
   mongodb:
     image: mongo:latest
     ports:
       - '27017:27017'
+    networks:
+      - app-network
+
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: api-snx-postgres
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
     ports:
       - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command:
+      - 'postgres'
+      - '-c'
+      - 'max_connections=100'
+      - '-c'
+      - 'shared_buffers=256MB'
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
