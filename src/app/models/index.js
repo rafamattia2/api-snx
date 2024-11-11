@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { Sequelize, DataTypes } from 'sequelize';
-import { User } from './user.js';
-import definePost from './post.js';
-import defineComment from './comment.js';
+import User from './user.js';
+import Post from './post.js';
+import Comment from './comment.js';
 import databaseConfig from '../../configs/database.js';
 
 dotenv.config();
@@ -34,14 +34,11 @@ const initializeConnections = async () => {
     console.log('PostgreSQL connection established successfully.');
 
     // Inicializar modelos
-    const Post = definePost(sequelize);
-    const Comment = defineComment(sequelize);
-
-    // Armazenar modelos
+    const UserModel = User.init(mongoose);
     models = {
-      User,
-      Post,
-      Comment,
+      User: UserModel,
+      Post: Post.init(sequelize, DataTypes),
+      Comment: Comment.init(sequelize, DataTypes),
     };
 
     // Executar associações

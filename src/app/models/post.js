@@ -1,37 +1,35 @@
-import { Model, DataTypes } from 'sequelize';
+import { Model } from 'sequelize';
 
-export default (sequelize) => {
-  class Post extends Model {
-    static associate(models) {
-      Post.hasMany(models.Comment, {
-        foreignKey: 'postId',
-        onDelete: 'CASCADE',
-      });
-    }
+export default class Post extends Model {
+  static init(sequelize, DataTypes) {
+    return super.init(
+      {
+        title: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        content: {
+          type: DataTypes.TEXT,
+          allowNull: false,
+        },
+        userId: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+      },
+      {
+        sequelize,
+        modelName: 'Post',
+        tableName: 'posts',
+        underscored: true,
+      }
+    );
   }
 
-  Post.init(
-    {
-      title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      content: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      userId: {
-        type: DataTypes.STRING, // MongoDB ObjectId
-        allowNull: false,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Post',
-      tableName: 'posts',
-      underscored: true,
-    }
-  );
-
-  return Post;
-};
+  static associate(models) {
+    this.hasMany(models.Comment, {
+      foreignKey: 'postId',
+      onDelete: 'CASCADE',
+    });
+  }
+}

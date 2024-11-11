@@ -1,38 +1,45 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-});
+export default class User {
+  static init(mongoose) {
+    const schema = {
+      name: {
+        type: String,
+        required: true,
+      },
+      username: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      password: {
+        type: String,
+        required: true,
+      },
+    };
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+    const options = {
+      timestamps: true,
+    };
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+    const userSchema = new mongoose.Schema(schema, options);
+
+    userSchema.pre('save', async function (next) {
+      if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 8);
+      }
+      next();
+    });
+
+    userSchema.methods.comparePassword = async function (password) {
+      return await bcrypt.compare(password, this.password);
+    };
+
+    return mongoose.models.User || mongoose.model('User', userSchema);
   }
-});
 
-userSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
-
-const User = mongoose.model('User', userSchema);
-
-export { User };
+  // static associate(models) {
+  //   // Implementar se necessário no futuro
+  // }
+}

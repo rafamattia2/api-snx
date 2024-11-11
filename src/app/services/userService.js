@@ -1,4 +1,4 @@
-import { User } from '../models/user.js';
+import { getModels } from '../models/index.js';
 import jwt from 'jsonwebtoken';
 import authConfig from '../../configs/auth.js';
 import dotenv from 'dotenv';
@@ -7,6 +7,7 @@ dotenv.config();
 
 const createUser = async (name, username, password) => {
   try {
+    const { User } = getModels();
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       throw new Error('Username is already taken');
@@ -25,6 +26,7 @@ const createUser = async (name, username, password) => {
 
 const loginUser = async (username, password) => {
   try {
+    const { User } = getModels();
     const user = await User.findOne({ username });
 
     if (!user) {
@@ -53,6 +55,7 @@ const loginUser = async (username, password) => {
 
 const getUserById = async (userId) => {
   try {
+    const { User } = getModels();
     const user = await User.findById(userId);
     if (!user) {
       throw new Error('User not found');
