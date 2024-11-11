@@ -26,7 +26,7 @@ const postController = {
     try {
       const { id } = req.params;
       const { title, content } = req.body;
-      const userId = req.user.id;
+      const userId = req.userId; // Alterado de req.user.id para req.userId
 
       const post = await postService.updatePost(id, { title, content }, userId);
       return res.status(200).json(post);
@@ -38,7 +38,7 @@ const postController = {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      const userId = req.userId; // Alterado de req.user.id para req.userId
 
       await postService.deletePost(id, userId);
       return res.status(204).send();
@@ -46,6 +46,7 @@ const postController = {
       return res.status(400).json({ error: error.message });
     }
   },
+
   async getPostComments(req, res) {
     try {
       const { postId } = req.params;
