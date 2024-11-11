@@ -6,11 +6,6 @@ const router = Router();
 
 router.post('/posts', authMiddleware, postController.create);
 router.get('/posts', authMiddleware, postController.list);
-router.get(
-  '/posts/:postId/comments',
-  authMiddleware,
-  postController.getPostComments
-);
 router.put('/posts/:id', authMiddleware, postController.update);
 router.delete('/posts/:id', authMiddleware, postController.delete);
 

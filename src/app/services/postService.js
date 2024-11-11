@@ -7,16 +7,20 @@ const postService = {
     return post;
   },
 
-  async listPosts() {
+  async listPosts(page = 1, limit = 10) {
     const { Post, Comment } = getModels();
-    const posts = await Post.findAll({
+    const offset = (page - 1) * limit;
+
+    const { count, rows: posts } = await Post.findAndCountAll({
       include: [
         {
           model: Comment,
-          include: [], // Removemos o include do User aqui
+          include: [],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
     });
 
     // Buscamos os usuários do MongoDB separadamente
@@ -25,7 +29,6 @@ const postService = {
         const { User } = getModels();
         const user = await User.findById(post.userId);
 
-        // Transformamos os comentários também
         const commentsWithUsers = await Promise.all(
           post.Comments.map(async (comment) => {
             const commentUser = await User.findById(comment.userId);
@@ -56,7 +59,15 @@ const postService = {
       })
     );
 
-    return postsWithUsers;
+    return {
+      posts: postsWithUsers,
+      pagination: {
+        total: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        hasMore: page * limit < count,
+      },
+    };
   },
 
   async updatePost(id, data, userId) {
@@ -67,14 +78,12 @@ const postService = {
       throw new Error('Post não encontrado');
     }
 
-    // Convertemos ambos para string para comparação
     if (post.userId.toString() !== userId.toString()) {
       throw new Error('Não autorizado a atualizar este post');
     }
 
     const updatedPost = await post.update(data);
 
-    // Buscamos o usuário para retornar junto com o post
     const { User } = getModels();
     const user = await User.findById(post.userId);
 
@@ -98,25 +107,11 @@ const postService = {
       throw new Error('Post não encontrado');
     }
 
-    // Convertemos ambos para string para comparação
     if (post.userId.toString() !== userId.toString()) {
       throw new Error('Não autorizado a deletar este post');
     }
 
     await post.destroy();
-  },
-
-  async getPostComments(postId) {
-    const { Comment, Post } = getModels();
-    return await Comment.findAll({
-      where: { postId },
-      include: [
-        {
-          model: Post,
-          attributes: ['id', 'title'],
-        },
-      ],
-    });
   },
 };
 

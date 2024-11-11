@@ -47,6 +47,47 @@ const commentService = {
     }
   },
 
+  async listComments(postId, page = 1, limit = 10) {
+    const { Comment } = getModels();
+    const offset = (page - 1) * limit;
+
+    const { count, rows: comments } = await Comment.findAndCountAll({
+      where: { postId },
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+    });
+
+    // Buscar informações dos usuários
+    const commentsWithUsers = await Promise.all(
+      comments.map(async (comment) => {
+        const { User } = getModels();
+        const user = await User.findById(comment.userId);
+
+        return {
+          ...comment.toJSON(),
+          User: user
+            ? {
+                id: user._id,
+                name: user.name,
+                username: user.username,
+              }
+            : null,
+        };
+      })
+    );
+
+    return {
+      comments: commentsWithUsers,
+      pagination: {
+        total: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        hasMore: page * limit < count,
+      },
+    };
+  },
+
   async deleteComment(id, userId) {
     const { Comment } = getModels();
     const comment = await Comment.findOne({ where: { id } });

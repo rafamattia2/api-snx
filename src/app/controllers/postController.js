@@ -15,8 +15,11 @@ const postController = {
 
   async list(req, res) {
     try {
-      const posts = await postService.listPosts();
-      return res.status(200).json(posts);
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const result = await postService.listPosts(page, limit);
+      return res.status(200).json(result);
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
@@ -44,19 +47,6 @@ const postController = {
       return res.status(204).send();
     } catch (error) {
       return res.status(400).json({ error: error.message });
-    }
-  },
-
-  async getPostComments(req, res) {
-    try {
-      const { postId } = req.params;
-      const comments = await postService.getPostComments(postId);
-      if (!comments) {
-        return res.status(404).json({ error: 'Post not found or no comments' });
-      }
-      res.json(comments);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to retrieve comments' });
     }
   },
 };

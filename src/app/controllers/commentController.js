@@ -55,6 +55,26 @@ const commentController = {
       return res.status(400).json({ error: error.message });
     }
   },
+
+  async list(req, res) {
+    try {
+      const { postId } = req.params;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      if (!postId || isNaN(postId)) {
+        return res.status(400).json({ error: 'PostId inválido' });
+      }
+
+      const result = await commentService.listComments(postId, page, limit);
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        error: 'Erro ao listar comentários',
+        details: error.message,
+      });
+    }
+  },
 };
 
 export default commentController;
