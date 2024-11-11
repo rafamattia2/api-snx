@@ -5,6 +5,7 @@ export default (sequelize) => {
     static associate(models) {
       Comment.belongsTo(models.Post, {
         foreignKey: 'postId',
+        as: 'post',
         onDelete: 'CASCADE',
       });
     }
@@ -17,7 +18,7 @@ export default (sequelize) => {
         allowNull: false,
       },
       userId: {
-        type: DataTypes.STRING, // Alterado para STRING para armazenar MongoDB ObjectId
+        type: DataTypes.STRING,
         allowNull: false,
       },
       postId: {
