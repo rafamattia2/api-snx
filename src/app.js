@@ -1,7 +1,7 @@
 import express from 'express';
 import { initialize } from './app/models/index.js';
 import routes from './routes/index.js';
-
+import { errorHandler } from './app/middlewares/errorHandler.js';
 const app = express();
 
 const startApp = async () => {
@@ -11,6 +11,7 @@ const startApp = async () => {
 
     app.use(express.json());
     app.use('/api/v1', routes);
+    app.use(errorHandler);
 
     const port = process.env.PORT || 3000;
     app.listen(port, () => {

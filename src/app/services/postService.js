@@ -1,3 +1,4 @@
+import { NotFoundError, UnauthorizedError } from '../errors/appError.js';
 import { getModels } from '../models/index.js';
 import pagination from '../utils/pagination.js';
 
@@ -71,16 +72,16 @@ const postService = {
     const post = await Post.findOne({ where: { id } });
 
     if (!post) {
-      throw new Error('Post not found');
+      throw new NotFoundError('Post not found');
     }
 
     if (post.userId.toString() !== userId.toString()) {
-      throw new Error('Not authorized to update this post');
+      throw new UnauthorizedError('Not authorized to update this post');
     }
 
     const user = await User.findById(post.userId);
     if (!user) {
-      throw new Error('Post author not found');
+      throw new NotFoundError('Post author not found');
     }
 
     const updatedPost = await post.update(data);
@@ -100,11 +101,11 @@ const postService = {
     const post = await Post.findOne({ where: { id } });
 
     if (!post) {
-      throw new Error('Post not found');
+      throw new NotFoundError('Post not found');
     }
 
     if (post.userId.toString() !== userId.toString()) {
-      throw new Error('Not authorized to delete this post');
+      throw new UnauthorizedError('Not authorized to delete this post');
     }
 
     await post.destroy();
