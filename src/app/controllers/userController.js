@@ -1,38 +1,34 @@
-import { userService } from '../services/userService.js';
+import userService from '../services/userService.js';
+import { CreateUserDTO, LoginUserDTO } from '../dtos/user/index.js';
 
-const registerUser = async (req, res, next) => {
-  const { name, username, password } = req.body;
-  try {
-    const result = await userService.createUser(name, username, password);
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
+export class UserController {
+  async registerUser(req, res, next) {
+    try {
+      const userData = await CreateUserDTO.validate(req.body);
+      const result = await userService.createUser(userData);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-const loginUser = async (req, res, next) => {
-  const { username, password } = req.body;
-  try {
-    const result = await userService.loginUser(username, password);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
+  async loginUser(req, res, next) {
+    try {
+      const loginData = await LoginUserDTO.validate(req.body);
+      const result = await userService.loginUser(loginData);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-const getUser = async (req, res, next) => {
-  const { userId } = req.params;
-  try {
-    const result = await userService.getUserById(userId);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
+  async getUser(req, res, next) {
+    const { userId } = req.params;
+    try {
+      const result = await userService.getUserById(userId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
   }
-};
-
-const userController = {
-  registerUser,
-  loginUser,
-  getUser,
-};
-export { userController };
+}

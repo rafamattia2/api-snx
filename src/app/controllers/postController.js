@@ -1,58 +1,88 @@
+import {
+  CreatePostDTO,
+  UpdatePostDTO,
+  DeletePostDTO,
+  ListPostsDTO,
+} from '../dtos/post/index.js';
 import postService from '../services/postService.js';
-import pagination from '../utils/pagination.js';
-import { CreatePostDTO } from '../dtos/postDTO.js';
 
-const postController = {
+export class PostController {
+  constructor(postService) {
+    postService = postService;
+  }
+
   async create(req, res, next) {
     try {
-      // Valida e transforma os dados usando o DTO
-      const postDTO = await CreatePostDTO.validate({
+      const postData = await CreatePostDTO.validate({
         ...req.body,
         userId: req.userId,
       });
 
-      // Usa o DTO validado no service
-      const post = await postService.createPost(postDTO);
+      const post = await postService.createPost(postData);
       return res.status(201).json(post);
     } catch (error) {
       next(error);
     }
-  },
-
-  async list(req, res, next) {
-    try {
-      const { page, limit } = pagination.getPagination(req);
-      const result = await postService.listPosts(page, limit);
-      return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  },
+  }
 
   async update(req, res, next) {
     try {
-      const { id } = req.params;
-      const { title, content } = req.body;
-      const userId = req.userId;
+      const updateData = await UpdatePostDTO.validate({
+        id: parseInt(req.params.id),
+        ...req.body,
+        userId: req.userId,
+      });
 
-      const post = await postService.updatePost(id, { title, content }, userId);
+      const post = await postService.updatePost(
+        updateData.id,
+        updateData,
+        updateData.userId
+      );
       return res.status(200).json(post);
     } catch (error) {
       next(error);
     }
-  },
+  }
 
   async delete(req, res, next) {
     try {
-      const { id } = req.params;
-      const userId = req.userId;
+      const deleteData = await DeletePostDTO.validate({
+        id: parseInt(req.params.id),
+        userId: req.userId,
+      });
 
-      await postService.deletePost(id, userId);
+      await postService.deletePost(deleteData.id, deleteData.userId);
       return res.status(204).send();
     } catch (error) {
       next(error);
     }
-  },
-};
+  }
 
-export default postController;
+  async list(req, res, next) {
+    try {
+      const { page, limit } = await ListPostsDTO.validate(req.query);
+      const posts = await postService.listPosts(page, limit);
+      return res.status(200).json(posts);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getById(req, res, next) {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid post ID' });
+      }
+
+      const post = await postService.getById(id);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      return res.status(200).json(post);
+    } catch (error) {
+      next(error);
+    }
+  }
+}

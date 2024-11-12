@@ -10,11 +10,15 @@ export class CreatePostDTO {
   static schema = yup.object().shape({
     title: yup
       .string()
-      .required('Título é obrigatório')
-      .min(3, 'Título deve ter no mínimo 3 caracteres')
-      .max(255, 'Título deve ter no máximo 255 caracteres'),
-    content: yup.string().required('Conteúdo é obrigatório'),
-    userId: yup.string().required('UserId é obrigatório'),
+      .required('Title is required')
+      .min(3, 'Title must be at least 3 characters')
+      .max(255, 'Title must be at most 255 characters')
+      .trim(),
+    content: yup.string().required('Content is required').trim(),
+    userId: yup
+      .string()
+      .required('UserId is required')
+      .matches(/^[0-9a-fA-F]{24}$/, 'Invalid user ID format'), // MongoDB ID validation
   });
 
   static async validate(data) {
@@ -22,7 +26,6 @@ export class CreatePostDTO {
       abortEarly: false,
       stripUnknown: true,
     });
-
     return new CreatePostDTO(validatedData);
   }
 }

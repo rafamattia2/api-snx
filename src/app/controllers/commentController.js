@@ -1,65 +1,56 @@
 import commentService from '../services/commentService.js';
-import pagination from '../utils/pagination.js';
-import { ValidationError, UnauthorizedError } from '../errors/appError.js';
+import {
+  CreateCommentDTO,
+  DeleteCommentDTO,
+  ListCommentsDTO,
+} from '../dtos/comment/index.js';
 
-const commentController = {
+export class CommentController {
   async create(req, res, next) {
     try {
-      const postId = parseInt(req.params.postId);
-      const { content } = req.body;
-      const userId = req.userId;
-
-      if (!content) {
-        throw new ValidationError('Content is required');
-      }
-
-      if (!postId || isNaN(postId)) {
-        throw new ValidationError('Invalid PostId');
-      }
-
-      if (!userId) {
-        throw new UnauthorizedError('User not authenticated');
-      }
-
-      const comment = await commentService.createComment({
-        content,
-        postId,
-        userId,
+      const commentData = await CreateCommentDTO.validate({
+        content: req.body.content,
+        postId: parseInt(req.params.postId),
+        userId: req.userId,
       });
 
+      const comment = await commentService.createComment(commentData);
       return res.status(201).json(comment);
     } catch (error) {
       next(error);
     }
-  },
+  }
 
   async delete(req, res, next) {
     try {
-      const { id } = req.params;
-      const userId = req.userId;
+      const deleteData = await DeleteCommentDTO.validate({
+        id: parseInt(req.params.id),
+        userId: req.userId,
+      });
 
-      await commentService.deleteComment(id, userId);
+      await commentService.deleteComment(deleteData.id, deleteData.userId);
       return res.status(204).send();
     } catch (error) {
       next(error);
     }
-  },
+  }
 
   async list(req, res, next) {
     try {
-      const { postId } = req.params;
-      const { page, limit } = pagination.getPagination(req);
+      const listData = await ListCommentsDTO.validate({
+        postId: parseInt(req.params.postId),
+        page: req.query.page,
+        limit: req.query.limit,
+      });
 
-      if (!postId || isNaN(postId)) {
-        throw new ValidationError('Invalid PostId');
-      }
-
-      const result = await commentService.listComments(postId, page, limit);
+      const result = await commentService.listComments(
+        listData.postId,
+        listData.page,
+        listData.limit
+      );
       return res.status(200).json(result);
     } catch (error) {
       next(error);
     }
-  },
-};
-
-export default commentController;
+  }
+}
