@@ -1,13 +1,18 @@
 import postService from '../services/postService.js';
 import pagination from '../utils/pagination.js';
+import { CreatePostDTO } from '../dtos/postDTO.js';
 
 const postController = {
   async create(req, res, next) {
     try {
-      const { title, content } = req.body;
-      const userId = req.userId;
+      // Valida e transforma os dados usando o DTO
+      const postDTO = await CreatePostDTO.validate({
+        ...req.body,
+        userId: req.userId,
+      });
 
-      const post = await postService.createPost({ title, content, userId });
+      // Usa o DTO validado no service
+      const post = await postService.createPost(postDTO);
       return res.status(201).json(post);
     } catch (error) {
       next(error);
