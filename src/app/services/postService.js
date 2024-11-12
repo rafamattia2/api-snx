@@ -23,7 +23,6 @@ const postService = {
       order: [['created_at', 'DESC']],
     });
 
-    // Buscamos os usuários do MongoDB separadamente
     const postsWithUsers = await Promise.all(
       posts.map(async (post) => {
         const { User } = getModels();
@@ -75,11 +74,11 @@ const postService = {
     const post = await Post.findOne({ where: { id } });
 
     if (!post) {
-      throw new Error('Post não encontrado');
+      throw new Error('Post not found');
     }
 
     if (post.userId.toString() !== userId.toString()) {
-      throw new Error('Não autorizado a atualizar este post');
+      throw new Error('Not authorized to delete this post');
     }
 
     const updatedPost = await post.update(data);
@@ -104,11 +103,11 @@ const postService = {
     const post = await Post.findOne({ where: { id } });
 
     if (!post) {
-      throw new Error('Post não encontrado');
+      throw new Error('Post not found');
     }
 
     if (post.userId.toString() !== userId.toString()) {
-      throw new Error('Não autorizado a deletar este post');
+      throw new Error('Not authorized to delete this post');
     }
 
     await post.destroy();

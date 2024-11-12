@@ -1,5 +1,4 @@
 import commentService from '../services/commentService.js';
-import { getModels } from '../models/index.js';
 
 const commentController = {
   async create(req, res) {
@@ -9,15 +8,15 @@ const commentController = {
       const userId = req.userId;
 
       if (!content) {
-        return res.status(400).json({ error: 'Content é obrigatório' });
+        return res.status(400).json({ error: 'Content is required' });
       }
 
       if (!postId || isNaN(postId)) {
-        return res.status(400).json({ error: 'PostId inválido' });
+        return res.status(400).json({ error: 'Invalid PostId' });
       }
 
       if (!userId) {
-        return res.status(401).json({ error: 'Usuário não autenticado' });
+        return res.status(401).json({ error: 'User not authenticated' });
       }
 
       const comment = await commentService.createComment({
@@ -28,17 +27,15 @@ const commentController = {
 
       return res.status(201).json(comment);
     } catch (error) {
-      console.error('Erro completo no controller:', error);
-
-      if (error.message.includes('Post não encontrado')) {
+      if (error.message.includes('Post not found')) {
         return res.status(404).json({ error: error.message });
       }
-      if (error.message.includes('Usuário não encontrado')) {
+      if (error.message.includes('User not found')) {
         return res.status(404).json({ error: error.message });
       }
 
       return res.status(500).json({
-        error: 'Erro ao criar comentário',
+        error: 'Error creating comment',
         details: error.message,
       });
     }
@@ -63,14 +60,14 @@ const commentController = {
       const limit = parseInt(req.query.limit) || 10;
 
       if (!postId || isNaN(postId)) {
-        return res.status(400).json({ error: 'PostId inválido' });
+        return res.status(400).json({ error: 'Invalid PostId' });
       }
 
       const result = await commentService.listComments(postId, page, limit);
       return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({
-        error: 'Erro ao listar comentários',
+        error: 'Error listing comments',
         details: error.message,
       });
     }

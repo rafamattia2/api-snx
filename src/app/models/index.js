@@ -8,7 +8,7 @@ import databaseConfig from '../../configs/database.js';
 
 dotenv.config();
 
-let sequelize;
+let sequelize = null;
 let models = null;
 
 const initializeConnections = async () => {
@@ -59,9 +59,7 @@ const initializeConnections = async () => {
 
 export const getModels = () => {
   if (!models) {
-    throw new Error(
-      'Models não foram inicializados. Chame initialize() primeiro.'
-    );
+    throw new Error('Models were not initialized. Call initialize() first.');
   }
   return models;
 };

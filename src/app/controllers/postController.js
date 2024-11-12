@@ -4,7 +4,7 @@ const postController = {
   async create(req, res) {
     try {
       const { title, content } = req.body;
-      const userId = req.userId; // Obtém o ID do usuário do middleware de autenticação
+      const userId = req.userId;
 
       const post = await postService.createPost({ title, content, userId });
       return res.status(201).json(post);
@@ -29,7 +29,7 @@ const postController = {
     try {
       const { id } = req.params;
       const { title, content } = req.body;
-      const userId = req.userId; // Alterado de req.user.id para req.userId
+      const userId = req.userId;
 
       const post = await postService.updatePost(id, { title, content }, userId);
       return res.status(200).json(post);
@@ -41,7 +41,7 @@ const postController = {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.userId; // Alterado de req.user.id para req.userId
+      const userId = req.userId;
 
       await postService.deletePost(id, userId);
       return res.status(204).send();

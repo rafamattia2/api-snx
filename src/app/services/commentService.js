@@ -7,12 +7,12 @@ const commentService = {
 
       const post = await Post.findByPk(data.postId);
       if (!post) {
-        throw new Error('Post não encontrado');
+        throw new Error('Post not found');
       }
 
       const user = await User.findById(data.userId);
       if (!user) {
-        throw new Error('Usuário não encontrado');
+        throw new Error('User not found');
       }
 
       const comment = await Comment.create({
@@ -23,7 +23,7 @@ const commentService = {
 
       const createdComment = await Comment.findByPk(comment.id);
       if (!createdComment) {
-        throw new Error('Erro ao recuperar o comentário criado');
+        throw new Error('Error retrieving the created comment.');
       }
 
       const response = {
@@ -42,8 +42,7 @@ const commentService = {
 
       return response;
     } catch (error) {
-      console.error('Erro detalhado ao criar comentário:', error);
-      throw new Error(`Erro ao criar comentário: ${error.message}`);
+      throw new Error(`Error creating comment: ${error.message}`);
     }
   },
 
@@ -58,7 +57,6 @@ const commentService = {
       order: [['created_at', 'DESC']],
     });
 
-    // Buscar informações dos usuários
     const commentsWithUsers = await Promise.all(
       comments.map(async (comment) => {
         const { User } = getModels();
