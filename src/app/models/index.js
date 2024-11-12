@@ -65,4 +65,4 @@ export const getModels = () => {
 };
 
 export const initialize = initializeConnections;
-export { sequelize, DataTypes };
+export { sequelize };

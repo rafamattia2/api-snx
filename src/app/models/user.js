@@ -37,8 +37,4 @@ export default class User {
 
     return mongoose.models.User || mongoose.model('User', userSchema);
   }
-
-  // static associate(models) {
-  //   // Implementar se necessário no futuro
-  // }
 }

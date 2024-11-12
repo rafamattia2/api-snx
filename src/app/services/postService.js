@@ -23,10 +23,9 @@ const postService = {
       offset,
       order: [['created_at', 'DESC']],
     });
-
+    const { User } = getModels();
     const postsWithUsers = await Promise.all(
       posts.map(async (post) => {
-        const { User } = getModels();
         const user = await User.findById(post.userId);
 
         const commentsWithUsers = await Promise.all(
@@ -68,7 +67,7 @@ const postService = {
   },
 
   async updatePost(id, data, userId) {
-    const { Post } = getModels();
+    const { User, Post } = getModels();
     const post = await Post.findOne({ where: { id } });
 
     if (!post) {
@@ -76,23 +75,23 @@ const postService = {
     }
 
     if (post.userId.toString() !== userId.toString()) {
-      throw new Error('Not authorized to delete this post');
+      throw new Error('Not authorized to update this post');
+    }
+
+    const user = await User.findById(post.userId);
+    if (!user) {
+      throw new Error('Post author not found');
     }
 
     const updatedPost = await post.update(data);
 
-    const { User } = getModels();
-    const user = await User.findById(post.userId);
-
     return {
       ...updatedPost.toJSON(),
-      user: user
-        ? {
-            id: user._id,
-            name: user.name,
-            username: user.username,
-          }
-        : null,
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+      },
     };
   },
 
