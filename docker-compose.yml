@@ -22,10 +22,22 @@ services:
 
   mongodb:
     image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: authDB
     ports:
       - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
     networks:
       - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: ['mongod', '--auth']
 
   postgres:
     image: postgres:latest
@@ -53,6 +65,7 @@ services:
 
 volumes:
   postgres_data:
+  mongodb_data:
 
 networks:
   app-network:
