@@ -1,4 +1,5 @@
 import { getModels } from '../models/index.js';
+import pagination from '../utils/pagination.js';
 
 const postService = {
   async createPost(data) {
@@ -33,7 +34,7 @@ const postService = {
             const commentUser = await User.findById(comment.userId);
             return {
               ...comment.toJSON(),
-              User: commentUser
+              user: commentUser
                 ? {
                     id: commentUser._id,
                     name: commentUser.name,
@@ -46,27 +47,24 @@ const postService = {
 
         return {
           ...post.toJSON(),
-          User: user
+          user: user
             ? {
                 id: user._id,
                 name: user.name,
                 username: user.username,
               }
             : null,
-          Comments: commentsWithUsers,
+          comments: commentsWithUsers,
         };
       })
     );
 
-    return {
-      posts: postsWithUsers,
-      pagination: {
-        total: count,
-        currentPage: page,
-        totalPages: Math.ceil(count / limit),
-        hasMore: page * limit < count,
-      },
-    };
+    return pagination.createPaginatedResponse(
+      postsWithUsers,
+      count,
+      page,
+      limit
+    );
   },
 
   async updatePost(id, data, userId) {
@@ -88,7 +86,7 @@ const postService = {
 
     return {
       ...updatedPost.toJSON(),
-      User: user
+      user: user
         ? {
             id: user._id,
             name: user.name,

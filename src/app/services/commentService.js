@@ -1,4 +1,5 @@
 import { getModels } from '../models/index.js';
+import pagination from '../utils/pagination.js';
 
 const commentService = {
   async createComment(data) {
@@ -46,25 +47,27 @@ const commentService = {
     }
   },
 
-  async listComments(postId, page = 1, limit = 10) {
-    const { Comment } = getModels();
+  async listComments(postId, page, limit) {
+    const { Comment, User } = getModels();
     const offset = (page - 1) * limit;
 
-    const { count, rows: comments } = await Comment.findAndCountAll({
+    const { count, rows } = await Comment.findAndCountAll({
       where: { postId },
       limit,
       offset,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],
     });
 
-    const commentsWithUsers = await Promise.all(
-      comments.map(async (comment) => {
-        const { User } = getModels();
+    const commentsWithUser = await Promise.all(
+      rows.map(async (comment) => {
         const user = await User.findById(comment.userId);
-
         return {
-          ...comment.toJSON(),
-          User: user
+          id: comment.id,
+          content: comment.content,
+          postId: comment.postId,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          user: user
             ? {
                 id: user._id,
                 name: user.name,
@@ -75,15 +78,12 @@ const commentService = {
       })
     );
 
-    return {
-      comments: commentsWithUsers,
-      pagination: {
-        total: count,
-        currentPage: page,
-        totalPages: Math.ceil(count / limit),
-        hasMore: page * limit < count,
-      },
-    };
+    return pagination.createPaginatedResponse(
+      commentsWithUser,
+      count,
+      page,
+      limit
+    );
   },
 
   async deleteComment(id, userId) {
@@ -91,11 +91,11 @@ const commentService = {
     const comment = await Comment.findOne({ where: { id } });
 
     if (!comment) {
-      throw new Error('Comentário não encontrado');
+      throw new Error('Comment not found');
     }
 
     if (comment.userId.toString() !== userId.toString()) {
-      throw new Error('Não autorizado a deletar este comentário');
+      throw new Error('Not authorized to delete this comment');
     }
 
     await comment.destroy();

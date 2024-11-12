@@ -1,4 +1,5 @@
 import postService from '../services/postService.js';
+import pagination from '../utils/pagination.js';
 
 const postController = {
   async create(req, res) {
@@ -15,9 +16,7 @@ const postController = {
 
   async list(req, res) {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-
+      const { page, limit } = pagination.getPagination(req);
       const result = await postService.listPosts(page, limit);
       return res.status(200).json(result);
     } catch (error) {

@@ -1,4 +1,5 @@
 import commentService from '../services/commentService.js';
+import pagination from '../utils/pagination.js';
 
 const commentController = {
   async create(req, res) {
@@ -56,8 +57,7 @@ const commentController = {
   async list(req, res) {
     try {
       const { postId } = req.params;
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const { page, limit } = pagination.getPagination(req);
 
       if (!postId || isNaN(postId)) {
         return res.status(400).json({ error: 'Invalid PostId' });
