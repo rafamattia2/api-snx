@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import commentController from '../app/controllers/commentController.js';
+import { CommentController } from '../app/controllers/commentController.js';
 import { authMiddleware } from '../app/middlewares/authMiddleware.js';
 
 const router = Router();
+const commentController = new CommentController();
 
 router.post(
   '/posts/:postId/comments',

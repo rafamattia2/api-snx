@@ -1,10 +1,11 @@
 import express from 'express';
-import { userController } from '../app/controllers/userController.js';
+import { UserController } from '../app/controllers/userController.js';
 import { authMiddleware } from '../app/middlewares/authMiddleware.js';
 
 const router = express.Router();
+const userController = new UserController();
 
-router.post('/users/', userController.registerUser);
+router.post('/users/register', userController.registerUser);
 router.post('/users/login', userController.loginUser);
 router.get('/users/:userId', authMiddleware, userController.getUser);
 
