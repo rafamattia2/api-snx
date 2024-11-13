@@ -1,12 +1,14 @@
+import {
+  AppError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../errors/appError.js';
 import { getModels } from '../models/index.js';
 import pagination from '../utils/pagination.js';
-import {
-  UnauthorizedError,
-  NotFoundError,
-  AppError,
-} from '../errors/appError.js';
 
-const commentService = {
+export class CommentService {
+  constructor() {}
+
   async createComment(data) {
     try {
       const { Comment, Post, User } = getModels();
@@ -53,12 +55,17 @@ const commentService = {
       }
       throw new AppError(`Error creating comment: ${error.message}`);
     }
-  },
+  }
 
   async listComments(postId, page, limit) {
     try {
-      const { Comment, User } = getModels();
+      const { Comment, Post, User } = getModels();
       const offset = (page - 1) * limit;
+      const post = await Post.findByPk(postId);
+
+      if (!post) {
+        throw new NotFoundError('Post not found');
+      }
 
       const { count, rows } = await Comment.findAndCountAll({
         where: { postId },
@@ -103,7 +110,7 @@ const commentService = {
       }
       throw new AppError(`Error listing comments: ${error.message}`, 500);
     }
-  },
+  }
 
   async deleteComment(id, userId) {
     const { Comment } = getModels();
@@ -118,7 +125,5 @@ const commentService = {
     }
 
     await comment.destroy();
-  },
-};
-
-export default commentService;
+  }
+}

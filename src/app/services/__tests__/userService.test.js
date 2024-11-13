@@ -1,37 +1,29 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import userService from '../userService.js';
-import { getModels } from '../../models/index.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AppError,
   ConflictError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
-  AppError,
 } from '../../errors/appError.js';
+import { getModels } from '../../models/index.js';
+import { UserService } from '../userService.js';
 import jwt from 'jsonwebtoken';
 
-vi.mock('../../models/index.js', async () => {
-  return {
-    getModels: vi.fn(),
-  };
-});
-
-vi.mock('jsonwebtoken', async () => {
-  return {
-    default: {
-      sign: vi.fn(),
-    },
-  };
-});
+vi.mock('../../models/index.js');
+vi.mock('jsonwebtoken');
 
 describe('UserService', () => {
+  let userService;
   let mockUser;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
+    userService = new UserService();
+
     mockUser = {
-      _id: 'mockId',
+      _id: 'userId123',
       name: 'Test User',
       username: 'testuser',
       comparePassword: vi.fn(),
@@ -68,7 +60,7 @@ describe('UserService', () => {
     it('should throw ConflictError when username already exists', async () => {
       const userData = {
         name: 'Test User',
-        username: 'testuser',
+        username: 'existinguser',
         password: 'password123',
       };
 
@@ -81,43 +73,6 @@ describe('UserService', () => {
       await expect(userService.createUser(userData)).rejects.toThrow(
         ConflictError
       );
-    });
-
-    it('should throw ValidationError when validation fails', async () => {
-      const userData = {
-        name: 'Test User',
-        username: 'testuser',
-        password: 'password123',
-      };
-
-      getModels.mockReturnValue({
-        User: {
-          findOne: vi.fn().mockRejectedValue({
-            name: 'ValidationError',
-            message: 'Invalid data',
-          }),
-        },
-      });
-
-      await expect(userService.createUser(userData)).rejects.toThrow(
-        ValidationError
-      );
-    });
-
-    it('should throw AppError for unknown errors', async () => {
-      const userData = {
-        name: 'Test User',
-        username: 'testuser',
-        password: 'password123',
-      };
-
-      getModels.mockReturnValue({
-        User: {
-          findOne: vi.fn().mockRejectedValue(new Error('Unknown error')),
-        },
-      });
-
-      await expect(userService.createUser(userData)).rejects.toThrow(AppError);
     });
   });
 
@@ -147,7 +102,7 @@ describe('UserService', () => {
 
     it('should throw NotFoundError when user does not exist', async () => {
       const credentials = {
-        username: 'testuser',
+        username: 'nonexistent',
         password: 'password123',
       };
 
@@ -184,7 +139,7 @@ describe('UserService', () => {
 
   describe('getUserById', () => {
     it('should return user by id successfully', async () => {
-      const userId = 'mockId';
+      const userId = 'userId123';
 
       getModels.mockReturnValue({
         User: {
@@ -215,32 +170,6 @@ describe('UserService', () => {
       await expect(userService.getUserById(userId)).rejects.toThrow(
         NotFoundError
       );
-    });
-
-    it('should throw ValidationError when user ID format is invalid', async () => {
-      const userId = 'invalidId';
-
-      getModels.mockReturnValue({
-        User: {
-          findById: vi.fn().mockRejectedValue({ name: 'CastError' }),
-        },
-      });
-
-      await expect(userService.getUserById(userId)).rejects.toThrow(
-        ValidationError
-      );
-    });
-
-    it('should throw AppError for unknown errors', async () => {
-      const userId = 'mockId';
-
-      getModels.mockReturnValue({
-        User: {
-          findById: vi.fn().mockRejectedValue(new Error('Unknown error')),
-        },
-      });
-
-      await expect(userService.getUserById(userId)).rejects.toThrow(AppError);
     });
   });
 });

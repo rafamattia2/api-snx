@@ -1,19 +1,30 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserController } from '../userController.js';
-import userService from '../../services/userService.js';
 import { CreateUserDTO, LoginUserDTO } from '../../dtos/user/index.js';
 
-vi.mock('../../services/userService.js');
-vi.mock('../../dtos/user/index.js');
+vi.mock('../../dtos/user/index.js', () => ({
+  CreateUserDTO: { validate: vi.fn() },
+  LoginUserDTO: { validate: vi.fn() },
+}));
+
+vi.mock('../../services/userService.js', () => ({
+  UserService: vi.fn().mockImplementation(() => ({
+    createUser: vi.fn(),
+    loginUser: vi.fn(),
+    getUserById: vi.fn(),
+  })),
+}));
 
 describe('UserController', () => {
-  let userController;
+  let controller;
   let mockReq;
   let mockRes;
   let mockNext;
 
   beforeEach(() => {
-    userController = new UserController();
+    vi.clearAllMocks();
+
+    controller = new UserController();
     mockNext = vi.fn();
     mockRes = {
       status: vi.fn().mockReturnThis(),
@@ -36,16 +47,22 @@ describe('UserController', () => {
       const validatedData = { ...mockReq.body };
       const serviceResponse = {
         message: 'User created successfully',
-        user: { id: 1, name: 'Test User', username: 'testuser' },
+        user: {
+          id: 1,
+          name: 'Test User',
+          username: 'testuser',
+        },
       };
 
       CreateUserDTO.validate.mockResolvedValue(validatedData);
-      userService.createUser.mockResolvedValue(serviceResponse);
+      controller.userService.createUser.mockResolvedValue(serviceResponse);
 
-      await userController.registerUser(mockReq, mockRes, mockNext);
+      await controller.registerUser(mockReq, mockRes, mockNext);
 
       expect(CreateUserDTO.validate).toHaveBeenCalledWith(mockReq.body);
-      expect(userService.createUser).toHaveBeenCalledWith(validatedData);
+      expect(controller.userService.createUser).toHaveBeenCalledWith(
+        validatedData
+      );
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
@@ -54,7 +71,7 @@ describe('UserController', () => {
       const error = new Error('Validation error');
       CreateUserDTO.validate.mockRejectedValue(error);
 
-      await userController.registerUser(mockReq, mockRes, mockNext);
+      await controller.registerUser(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -78,12 +95,14 @@ describe('UserController', () => {
       };
 
       LoginUserDTO.validate.mockResolvedValue(validatedData);
-      userService.loginUser.mockResolvedValue(serviceResponse);
+      controller.userService.loginUser.mockResolvedValue(serviceResponse);
 
-      await userController.loginUser(mockReq, mockRes, mockNext);
+      await controller.loginUser(mockReq, mockRes, mockNext);
 
       expect(LoginUserDTO.validate).toHaveBeenCalledWith(mockReq.body);
-      expect(userService.loginUser).toHaveBeenCalledWith(validatedData);
+      expect(controller.userService.loginUser).toHaveBeenCalledWith(
+        validatedData
+      );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
@@ -92,7 +111,7 @@ describe('UserController', () => {
       const error = new Error('Invalid credentials');
       LoginUserDTO.validate.mockRejectedValue(error);
 
-      await userController.loginUser(mockReq, mockRes, mockNext);
+      await controller.loginUser(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -116,20 +135,20 @@ describe('UserController', () => {
         },
       };
 
-      userService.getUserById.mockResolvedValue(serviceResponse);
+      controller.userService.getUserById.mockResolvedValue(serviceResponse);
 
-      await userController.getUser(mockReq, mockRes, mockNext);
+      await controller.getUser(mockReq, mockRes, mockNext);
 
-      expect(userService.getUserById).toHaveBeenCalledWith('123');
+      expect(controller.userService.getUserById).toHaveBeenCalledWith('123');
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
 
     it('should handle errors through next middleware', async () => {
       const error = new Error('User not found');
-      userService.getUserById.mockRejectedValue(error);
+      controller.userService.getUserById.mockRejectedValue(error);
 
-      await userController.getUser(mockReq, mockRes, mockNext);
+      await controller.getUser(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });

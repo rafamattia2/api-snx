@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PostController } from '../postController.js';
-import postService from '../../services/postService.js';
+import { PostService } from '../../services/postService.js';
 import {
   CreatePostDTO,
   UpdatePostDTO,
@@ -8,21 +8,12 @@ import {
   ListPostsDTO,
 } from '../../dtos/post/index.js';
 
+vi.mock('../../services/postService.js');
 vi.mock('../../dtos/post/index.js', () => ({
   CreatePostDTO: { validate: vi.fn() },
   UpdatePostDTO: { validate: vi.fn() },
   DeletePostDTO: { validate: vi.fn() },
   ListPostsDTO: { validate: vi.fn() },
-}));
-
-vi.mock('../../services/postService.js', () => ({
-  default: {
-    createPost: vi.fn(),
-    updatePost: vi.fn(),
-    deletePost: vi.fn(),
-    listPosts: vi.fn(),
-    getById: vi.fn(),
-  },
 }));
 
 describe('PostController', () => {
@@ -32,8 +23,16 @@ describe('PostController', () => {
   let mockNext;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    controller = new PostController(postService);
+    const mockPostService = {
+      createPost: vi.fn(),
+      updatePost: vi.fn(),
+      deletePost: vi.fn(),
+      listPosts: vi.fn(),
+      getById: vi.fn(),
+    };
+    controller = new PostController();
+    controller.postService = mockPostService;
+
     mockNext = vi.fn();
     mockRes = {
       status: vi.fn().mockReturnThis(),
@@ -45,28 +44,24 @@ describe('PostController', () => {
   describe('create', () => {
     beforeEach(() => {
       mockReq = {
-        body: {
-          title: 'Test Post',
-          content: 'Test Content',
-        },
+        body: { title: 'Test Post', content: 'Test Content' },
         userId: 'user123',
       };
     });
 
     it('should create a post successfully', async () => {
       const validatedData = {
-        ...mockReq.body,
-        userId: mockReq.userId,
+        title: 'Test Post',
+        content: 'Test Content',
+        userId: 'user123',
       };
       const serviceResponse = {
         id: 1,
         ...validatedData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       CreatePostDTO.validate.mockResolvedValue(validatedData);
-      postService.createPost.mockResolvedValue(serviceResponse);
+      controller.postService.createPost.mockResolvedValue(serviceResponse);
 
       await controller.create(mockReq, mockRes, mockNext);
 
@@ -74,7 +69,9 @@ describe('PostController', () => {
         ...mockReq.body,
         userId: mockReq.userId,
       });
-      expect(postService.createPost).toHaveBeenCalledWith(validatedData);
+      expect(controller.postService.createPost).toHaveBeenCalledWith(
+        validatedData
+      );
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
@@ -114,7 +111,7 @@ describe('PostController', () => {
       };
 
       UpdatePostDTO.validate.mockResolvedValue(validatedData);
-      postService.updatePost.mockResolvedValue(serviceResponse);
+      controller.postService.updatePost.mockResolvedValue(serviceResponse);
 
       await controller.update(mockReq, mockRes, mockNext);
 
@@ -123,7 +120,7 @@ describe('PostController', () => {
         ...mockReq.body,
         userId: mockReq.userId,
       });
-      expect(postService.updatePost).toHaveBeenCalledWith(
+      expect(controller.postService.updatePost).toHaveBeenCalledWith(
         validatedData.id,
         validatedData,
         validatedData.userId
@@ -164,7 +161,7 @@ describe('PostController', () => {
         id: parseInt(mockReq.params.id),
         userId: mockReq.userId,
       });
-      expect(postService.deletePost).toHaveBeenCalledWith(
+      expect(controller.postService.deletePost).toHaveBeenCalledWith(
         validatedData.id,
         validatedData.userId
       );
@@ -204,12 +201,12 @@ describe('PostController', () => {
       };
 
       ListPostsDTO.validate.mockResolvedValue(validatedData);
-      postService.listPosts.mockResolvedValue(serviceResponse);
+      controller.postService.listPosts.mockResolvedValue(serviceResponse);
 
       await controller.list(mockReq, mockRes, mockNext);
 
       expect(ListPostsDTO.validate).toHaveBeenCalledWith(mockReq.query);
-      expect(postService.listPosts).toHaveBeenCalledWith(
+      expect(controller.postService.listPosts).toHaveBeenCalledWith(
         validatedData.page,
         validatedData.limit
       );
@@ -241,11 +238,11 @@ describe('PostController', () => {
         content: 'Test Content',
       };
 
-      postService.getById.mockResolvedValue(serviceResponse);
+      controller.postService.getById.mockResolvedValue(serviceResponse);
 
       await controller.getById(mockReq, mockRes, mockNext);
 
-      expect(postService.getById).toHaveBeenCalledWith(1);
+      expect(controller.postService.getById).toHaveBeenCalledWith(1);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
@@ -260,7 +257,7 @@ describe('PostController', () => {
     });
 
     it('should return 404 when post is not found', async () => {
-      postService.getById.mockResolvedValue(null);
+      controller.postService.getById.mockResolvedValue(null);
 
       await controller.getById(mockReq, mockRes, mockNext);
 
@@ -270,7 +267,7 @@ describe('PostController', () => {
 
     it('should handle errors through next middleware', async () => {
       const error = new Error('Database error');
-      postService.getById.mockRejectedValue(error);
+      controller.postService.getById.mockRejectedValue(error);
 
       await controller.getById(mockReq, mockRes, mockNext);
 

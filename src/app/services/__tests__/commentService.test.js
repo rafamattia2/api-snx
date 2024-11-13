@@ -1,21 +1,24 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import commentService from '../commentService.js';
-import { getModels } from '../../models/index.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AppError,
   NotFoundError,
   UnauthorizedError,
-  AppError,
 } from '../../errors/appError.js';
+import { getModels } from '../../models/index.js';
 import pagination from '../../utils/pagination.js';
+import { CommentService } from '../commentService.js';
 
 vi.mock('../../models/index.js');
 vi.mock('../../utils/pagination.js');
 
 describe('CommentService', () => {
+  let commentService;
   let mockComment, mockPost, mockUser;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    commentService = new CommentService();
 
     mockUser = {
       _id: 'userId123',

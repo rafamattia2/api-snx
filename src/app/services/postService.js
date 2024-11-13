@@ -2,15 +2,17 @@ import { NotFoundError, UnauthorizedError } from '../errors/appError.js';
 import { getModels } from '../models/index.js';
 import pagination from '../utils/pagination.js';
 
-const postService = {
+export class PostService {
+  constructor() {}
+
   async createPost(data) {
     const { Post } = getModels();
     const post = await Post.create(data);
     return post;
-  },
+  }
 
   async listPosts(page = 1, limit = 10) {
-    const { Post, Comment } = getModels();
+    const { Post, Comment, User } = getModels();
     const offset = (page - 1) * limit;
 
     const { count, rows: posts } = await Post.findAndCountAll({
@@ -24,7 +26,7 @@ const postService = {
       offset,
       order: [['created_at', 'DESC']],
     });
-    const { User } = getModels();
+
     const postsWithUsers = await Promise.all(
       posts.map(async (post) => {
         const user = await User.findById(post.userId);
@@ -65,7 +67,7 @@ const postService = {
       page,
       limit
     );
-  },
+  }
 
   async updatePost(id, data, userId) {
     const { User, Post } = getModels();
@@ -94,7 +96,7 @@ const postService = {
         username: user.username,
       },
     };
-  },
+  }
 
   async deletePost(id, userId) {
     const { Post } = getModels();
@@ -109,7 +111,5 @@ const postService = {
     }
 
     await post.destroy();
-  },
-};
-
-export default postService;
+  }
+}

@@ -1,20 +1,34 @@
 import jwt from 'jsonwebtoken';
 import authConfig from '../../configs/auth.js';
+import { UnauthorizedError } from '../errors/appError.js';
 
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Token not provided' });
-  }
-
+export const authMiddleware = (req, res, next) => {
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      throw new UnauthorizedError('No token provided');
+    }
+
+    const [, token] = authHeader.split(' ');
+
+    if (!token) {
+      throw new UnauthorizedError('Token malformatted');
+    }
+
     const decoded = jwt.verify(token, authConfig.jwt.secret);
-    req.userId = decoded.id;
-    next();
+
+    // Adiciona o usuário decodificado à requisição
+    req.user = {
+      id: decoded.id,
+      username: decoded.username,
+    };
+
+    return next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError('Invalid token');
+    }
+    throw error;
   }
 };
-
-export { authMiddleware };

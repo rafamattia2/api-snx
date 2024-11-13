@@ -1,17 +1,20 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import postService from '../postService.js';
-import { getModels } from '../../models/index.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFoundError, UnauthorizedError } from '../../errors/appError.js';
+import { getModels } from '../../models/index.js';
 import pagination from '../../utils/pagination.js';
+import { PostService } from '../postService.js';
 
 vi.mock('../../models/index.js');
 vi.mock('../../utils/pagination.js');
 
 describe('PostService', () => {
+  let postService;
   let mockPost, mockUser, mockComment;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    postService = new PostService();
 
     mockUser = {
       _id: 'userId123',
@@ -41,7 +44,6 @@ describe('PostService', () => {
         title: 'Test Post',
         content: 'Test Content',
         userId: 'userId123',
-        Comments: [mockComment],
       }),
     };
   });
@@ -61,7 +63,6 @@ describe('PostService', () => {
       });
 
       const result = await postService.createPost(postData);
-
       expect(result).toEqual(mockPost);
     });
   });
@@ -83,7 +84,6 @@ describe('PostService', () => {
         User: {
           findById: vi.fn().mockResolvedValue(mockUser),
         },
-        Comment: {},
       });
 
       pagination.createPaginatedResponse.mockReturnValue({
@@ -109,21 +109,19 @@ describe('PostService', () => {
         content: 'Updated Content',
       };
 
-      const mockPostToUpdate = {
+      const mockUpdatedPost = {
         ...mockPost,
+        ...updateData,
         update: vi.fn().mockResolvedValue({
           ...mockPost,
           ...updateData,
-          toJSON: () => ({
-            ...mockPost.toJSON(),
-            ...updateData,
-          }),
+          toJSON: () => ({ ...mockPost, ...updateData }),
         }),
       };
 
       getModels.mockReturnValue({
         Post: {
-          findOne: vi.fn().mockResolvedValue(mockPostToUpdate),
+          findOne: vi.fn().mockResolvedValue(mockUpdatedPost),
         },
         User: {
           findById: vi.fn().mockResolvedValue(mockUser),
@@ -132,9 +130,9 @@ describe('PostService', () => {
 
       const result = await postService.updatePost(1, updateData, 'userId123');
 
-      expect(result.title).toBe(updateData.title);
-      expect(result.content).toBe(updateData.content);
-      expect(result.user).toBeDefined();
+      expect(result).toHaveProperty('title', updateData.title);
+      expect(result).toHaveProperty('content', updateData.content);
+      expect(result).toHaveProperty('user');
     });
 
     it('should throw NotFoundError when post does not exist', async () => {
@@ -145,24 +143,19 @@ describe('PostService', () => {
       });
 
       await expect(
-        postService.updatePost(999, { title: 'New Title' }, 'userId123')
+        postService.updatePost(999, {}, 'userId123')
       ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw UnauthorizedError when user is not the post owner', async () => {
-      const mockPostToUpdate = {
-        ...mockPost,
-        userId: 'differentUserId',
-      };
-
       getModels.mockReturnValue({
         Post: {
-          findOne: vi.fn().mockResolvedValue(mockPostToUpdate),
+          findOne: vi.fn().mockResolvedValue(mockPost),
         },
       });
 
       await expect(
-        postService.updatePost(1, { title: 'New Title' }, 'userId123')
+        postService.updatePost(1, {}, 'differentUserId')
       ).rejects.toThrow(UnauthorizedError);
     });
   });
@@ -170,8 +163,7 @@ describe('PostService', () => {
   describe('deletePost', () => {
     it('should delete post successfully', async () => {
       const mockPostToDelete = {
-        id: 1,
-        userId: 'userId123',
+        ...mockPost,
         destroy: vi.fn().mockResolvedValue(undefined),
       };
 
@@ -199,20 +191,15 @@ describe('PostService', () => {
     });
 
     it('should throw UnauthorizedError when user is not the post owner', async () => {
-      const mockPostToDelete = {
-        id: 1,
-        userId: 'differentUserId',
-      };
-
       getModels.mockReturnValue({
         Post: {
-          findOne: vi.fn().mockResolvedValue(mockPostToDelete),
+          findOne: vi.fn().mockResolvedValue(mockPost),
         },
       });
 
-      await expect(postService.deletePost(1, 'userId123')).rejects.toThrow(
-        UnauthorizedError
-      );
+      await expect(
+        postService.deletePost(1, 'differentUserId')
+      ).rejects.toThrow(UnauthorizedError);
     });
   });
 });

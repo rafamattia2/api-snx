@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CommentController } from '../commentController.js';
-import commentService from '../../services/commentService.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CreateCommentDTO,
   DeleteCommentDTO,
   ListCommentsDTO,
 } from '../../dtos/comment/index.js';
+import { CommentController } from '../commentController.js';
 
 vi.mock('../../services/commentService.js');
 vi.mock('../../dtos/comment/index.js');
@@ -17,7 +16,14 @@ describe('CommentController', () => {
   let mockNext;
 
   beforeEach(() => {
+    const mockCommentService = {
+      createComment: vi.fn(),
+      deleteComment: vi.fn(),
+      listComments: vi.fn(),
+    };
     commentController = new CommentController();
+    commentController.commentService = mockCommentService; // Substitui o serviço real pelo mock
+
     mockNext = vi.fn();
     mockRes = {
       status: vi.fn().mockReturnThis(),
@@ -49,12 +55,16 @@ describe('CommentController', () => {
       };
 
       CreateCommentDTO.validate.mockResolvedValue(validatedData);
-      commentService.createComment.mockResolvedValue(serviceResponse);
+      commentController.commentService.createComment.mockResolvedValue(
+        serviceResponse
+      );
 
       await commentController.create(mockReq, mockRes, mockNext);
 
       expect(CreateCommentDTO.validate).toHaveBeenCalledWith(validatedData);
-      expect(commentService.createComment).toHaveBeenCalledWith(validatedData);
+      expect(
+        commentController.commentService.createComment
+      ).toHaveBeenCalledWith(validatedData);
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
     });
@@ -88,7 +98,9 @@ describe('CommentController', () => {
       await commentController.delete(mockReq, mockRes, mockNext);
 
       expect(DeleteCommentDTO.validate).toHaveBeenCalledWith(validatedData);
-      expect(commentService.deleteComment).toHaveBeenCalledWith(1, 'user123');
+      expect(
+        commentController.commentService.deleteComment
+      ).toHaveBeenCalledWith(1, 'user123');
       expect(mockRes.status).toHaveBeenCalledWith(204);
       expect(mockRes.send).toHaveBeenCalled();
     });
@@ -127,7 +139,9 @@ describe('CommentController', () => {
       };
 
       ListCommentsDTO.validate.mockResolvedValue(validatedData);
-      commentService.listComments.mockResolvedValue(serviceResponse);
+      commentController.commentService.listComments.mockResolvedValue(
+        serviceResponse
+      );
 
       await commentController.list(mockReq, mockRes, mockNext);
 
@@ -136,7 +150,9 @@ describe('CommentController', () => {
         page: mockReq.query.page,
         limit: mockReq.query.limit,
       });
-      expect(commentService.listComments).toHaveBeenCalledWith(
+      expect(
+        commentController.commentService.listComments
+      ).toHaveBeenCalledWith(
         validatedData.postId,
         validatedData.page,
         validatedData.limit
