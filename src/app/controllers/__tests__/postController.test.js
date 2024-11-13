@@ -8,7 +8,6 @@ import {
   ListPostsDTO,
 } from '../../dtos/post/index.js';
 
-// Mock dos DTOs
 vi.mock('../../dtos/post/index.js', () => ({
   CreatePostDTO: { validate: vi.fn() },
   UpdatePostDTO: { validate: vi.fn() },
@@ -16,7 +15,6 @@ vi.mock('../../dtos/post/index.js', () => ({
   ListPostsDTO: { validate: vi.fn() },
 }));
 
-// Mock do postService
 vi.mock('../../services/postService.js', () => ({
   default: {
     createPost: vi.fn(),

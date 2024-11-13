@@ -13,11 +13,9 @@ let models = null;
 
 const initializeConnections = async () => {
   try {
-    // Setup MongoDB connection
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB connection established successfully.');
 
-    // Setup PostgreSQL with imported config
     sequelize = new Sequelize(
       databaseConfig.database,
       databaseConfig.username,
@@ -33,7 +31,6 @@ const initializeConnections = async () => {
     await sequelize.authenticate();
     console.log('PostgreSQL connection established successfully.');
 
-    // Initialize models
     const UserModel = User.init(mongoose);
     models = {
       User: UserModel,
@@ -41,12 +38,10 @@ const initializeConnections = async () => {
       Comment: Comment.init(sequelize, DataTypes),
     };
 
-    // Setup model associations
     Object.values(models)
       .filter((model) => typeof model.associate === 'function')
       .forEach((model) => model.associate(models));
 
-    // Sync models with database
     await sequelize.sync({ alter: true });
     console.log('Database synchronized successfully');
 

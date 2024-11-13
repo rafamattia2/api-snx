@@ -14,7 +14,6 @@ const pagination = {
     };
   },
 
-  // Page response helper
   createPaginatedResponse(data, total, page, limit) {
     const totalPages = Math.ceil(total / limit);
 
