@@ -1,60 +1,219 @@
-# API Project - Work in Progress
+# RESTful API Project - SmartNX Technical Challenge
 
-🚧 **Este projeto está em andamento** 🚧
+This project is a RESTful API developed in Node.js for managing users, posts, and comments. The API offers Create, Read, Update, and Delete (CRUD) operations with JWT authentication to protect routes. This README provides project information, including setup instructions, execution, and technologies used.
 
-Este repositório contém o desenvolvimento de uma API RESTful com Node.js, Express, Sequelize, PostgreSQL e MongoDB. A API está sendo construída para gerenciar posts e comentários, e estará equipada com autenticação JWT. No momento, a aplicação está em fase de configuração e implementação de funcionalidades principais.
+## Technologies Used
 
-## Tecnologias Usadas
+- **Node.js** with Express for endpoint creation
+- **Sequelize** and **Mongoose** for database management
+- **PostgreSQL** as relational database for posts and comments management
+- **MongoDB** for user registration and authentication
+- **JWT (JSON Web Token)** for secure authentication
+- **Docker** for container creation
+- **Vitest** for unit testing
+- **Yup** for data validation
 
-- **Node.js** com **Express**: Para criar os endpoints da API.
-- **Sequelize**: ORM para abstração de dados com PostgreSQL.
-- **MongoDB**: Banco de dados NoSQL utilizado para autenticação (registro de usuários, login, etc).
-- **JWT (JSON Web Token)**: Para autenticação segura nas rotas da API.
-- **Docker**: Para containerização da aplicação, garantindo um ambiente consistente e fácil de deploy.
+## Features
 
-## Funcionalidades em Andamento
+### Core Features
 
-- [x] **Configuração inicial** do projeto com Node.js, Express e Sequelize.
-- [x] **Health check** para monitorar a saúde da API e a conectividade com bancos de dados.
-- [ ] **Criação de endpoints de Posts** (Criação, leitura, atualização e exclusão).
-- [ ] **Sistema de comentários**: Cada post poderá ter comentários associados.
-- [ ] **Autenticação JWT** para todas as rotas.
-- [ ] **Documentação com Posman** (futura).
+1. **User Management**: Complete user registration and authentication system
+2. **Posts Management**: CRUD operations for posts
+3. **Comments System**: Full comment functionality on posts
+4. **JWT Authentication**: Secure route protection with JWT tokens
+5. **Dual Database System**: PostgreSQL for posts/comments and MongoDB for users
 
-## Como Rodar o Projeto
+### Additional Features
 
-1. **Clonar o repositório**:
+- **Error Handling**: Centralized error handling middleware
+- **Data Validation**: DTO pattern with Yup validation
+- **Pagination**: Implemented for listing resources
+- **Health Check**: API status monitoring endpoint
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/)
+- [PostgreSQL](https://www.postgresql.org/) and [MongoDB](https://www.mongodb.com/)
+- [Docker](https://www.docker.com/)
+
+## Setup and Execution
+
+1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/username/project-name.git
-   cd project-name
+   git clone https://github.com/rafamattia2/api-snx.git
+   cd api-snx
    ```
 
-2. **Instalar dependências**:
+2. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-3. **Configuração de variáveis de ambiente**:
-   Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
+3. **Configure environment**:
 
-   ```
-   JWT_SECRET=your_jwt_secret_value
-   MONGO_URI=mongodb://mongodb:27017/authDB
-   POSTGRES_URI=postgres://user:password@postgres:5432/api-snx-postgres
+   - Create `.env` file based on `.env.example`
+   - Only `JWT_SECRET` needs to be set, other variables can remain as default
+
+   ```env
+   JWT_SECRET=your_secret_key_here
    ```
 
-4. **Rodar o projeto com Docker Compose**:
+4. **Start the server**:
 
    ```bash
-    docker-compose up --build
+   npm start
    ```
 
-5. **Testar a rota Health Check**:
+5. **Run with Docker (RECOMMENDED)**:
 
-   - Após o projeto estar em execução, acesse o seguinte endpoint, em seu navegador, para verificar a saúde da API e a conexão com os bancos de dados
+   ```bash
+   docker-compose up --build
+   # or
+   docker compose up --build
+   ```
 
-     ```bash
-       http://localhost:3000/api/v1/health
-     ```
+## API Endpoints
+
+### Users
+
+- `POST /users` - Register new user
+- `POST /users/login` - Authenticate user and get JWT token
+- `GET /users/:userId` - Get user details
+- `GET /users` - List all users (paginated)
+- `PUT /users/:userId` - Update user information
+- `DELETE /users/:userId` - Delete user account
+
+### Posts
+
+- `POST /posts` - Create new post
+- `GET /posts` - List all posts (paginated)
+- `PUT /posts/:id` - Update post
+- `DELETE /posts/:id` - Delete post
+
+### Comments
+
+- `POST /posts/:postId/comments` - Add comment to post
+- `GET /posts/:postId/comments` - List post comments (paginated)
+- `PUT /comments/:id` - Update comment
+- `DELETE /comments/:id` - Delete comment
+
+### Health Check
+
+- `GET /health` - Check API status
+
+## Authentication
+
+All protected routes require a JWT token in the Authorization header:
+
+```
+Authorization: Bearer <your-token>
+```
+
+## Testing
+
+Unit tests are written using [Vitest](https://vitest.dev/).
+To run tests:
+
+```bash
+npm test
+```
+
+Tests cover main functionalities including services and controllers.
+
+## Error Handling
+
+The API implements a centralized error handling system with standardized error responses:
+
+- `400` - Bad Request (Validation errors)
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `409` - Conflict
+- `500` - Internal Server Error
+
+## Data Validation
+
+Input validation is handled using [Yup](https://www.npmjs.com/package/yup) schema validation:
+
+- User data validation
+- Post content validation
+- Comment content validation
+
+## API Documentation
+
+### Testing with Postman
+
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://rafadev-4523.postman.co/workspace/2a2adf42-be63-45e9-a56e-619634f9d932/overview)
+
+### Quick Start Guide
+
+1. **Create a User Account**:
+
+   - Use the `POST /users` endpoint
+   - Body example:
+
+   ```json
+   {
+     "name": "Test User",
+     "username": "testuser",
+     "password": "test123"
+   }
+   ```
+
+2. **Login to Get JWT Token**:
+
+   - Use the `POST /users/login` endpoint
+   - Body example:
+
+   ```json
+   {
+     "username": "testuser",
+     "password": "test123"
+   }
+   ```
+
+   - Copy the token from the response
+
+3. **Set Up Environment Variable**:
+
+   - In Postman, click on "Environment" in the left sidebar
+   - Create a new environment (e.g., "API Environment")
+   - Add a variable named `jwt_token`
+   - Paste your JWT token in the "Current Value" field
+   - Click "Save"
+
+4. **Using Protected Routes**:
+   - All protected routes will automatically use the `jwt_token` variable
+   - The token is valid for 1 hour
+   - If you get a 401 error, repeat step 2 to get a new token
+
+Now you can test all other endpoints! The authorization header is automatically included in all requests using the environment variable.
+
+> Note: Make sure to select your environment in Postman before making requests
+
+## Code Style
+
+We recommend using ESLint with AirBnB style. To install and configure:
+
+```bash
+npm install eslint --save-dev
+npx eslint --init
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+For more information or support, please open an issue in the repository.
