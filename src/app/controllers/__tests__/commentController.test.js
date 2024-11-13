@@ -1,13 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CommentController } from '../commentController.js';
 import {
   CreateCommentDTO,
   DeleteCommentDTO,
   ListCommentsDTO,
+  UpdateCommentDTO,
 } from '../../dtos/comment/index.js';
-import { CommentController } from '../commentController.js';
 
-vi.mock('../../services/commentService.js');
-vi.mock('../../dtos/comment/index.js');
+vi.mock('../../dtos/comment/index.js', () => ({
+  CreateCommentDTO: {
+    validate: vi.fn(),
+  },
+  DeleteCommentDTO: {
+    validate: vi.fn(),
+  },
+  ListCommentsDTO: {
+    validate: vi.fn(),
+  },
+  UpdateCommentDTO: {
+    validate: vi.fn(),
+  },
+}));
 
 describe('CommentController', () => {
   let commentController;
@@ -16,13 +29,17 @@ describe('CommentController', () => {
   let mockNext;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     const mockCommentService = {
       createComment: vi.fn(),
       deleteComment: vi.fn(),
       listComments: vi.fn(),
+      updateComment: vi.fn(),
     };
+
     commentController = new CommentController();
-    commentController.commentService = mockCommentService; // Substitui o serviço real pelo mock
+    commentController.commentService = mockCommentService;
 
     mockNext = vi.fn();
     mockRes = {
@@ -37,7 +54,7 @@ describe('CommentController', () => {
       mockReq = {
         body: { content: 'Test comment' },
         params: { postId: '1' },
-        userId: 'user123',
+        user: { id: 'user123' },
       };
     });
 
@@ -47,35 +64,21 @@ describe('CommentController', () => {
         postId: 1,
         userId: 'user123',
       };
-      const serviceResponse = {
-        id: 1,
-        content: 'Test comment',
-        postId: 1,
-        userId: 'user123',
-      };
 
       CreateCommentDTO.validate.mockResolvedValue(validatedData);
-      commentController.commentService.createComment.mockResolvedValue(
-        serviceResponse
-      );
+      commentController.commentService.createComment.mockResolvedValue({
+        id: 1,
+        ...validatedData,
+      });
 
       await commentController.create(mockReq, mockRes, mockNext);
 
-      expect(CreateCommentDTO.validate).toHaveBeenCalledWith(validatedData);
-      expect(
-        commentController.commentService.createComment
-      ).toHaveBeenCalledWith(validatedData);
+      expect(CreateCommentDTO.validate).toHaveBeenCalledWith({
+        content: mockReq.body.content,
+        postId: parseInt(mockReq.params.postId),
+        userId: mockReq.user.id,
+      });
       expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
-    });
-
-    it('should handle errors through next middleware', async () => {
-      const error = new Error('Validation error');
-      CreateCommentDTO.validate.mockRejectedValue(error);
-
-      await commentController.create(mockReq, mockRes, mockNext);
-
-      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 
@@ -83,7 +86,7 @@ describe('CommentController', () => {
     beforeEach(() => {
       mockReq = {
         params: { id: '1' },
-        userId: 'user123',
+        user: { id: 'user123' },
       };
     });
 
@@ -97,10 +100,10 @@ describe('CommentController', () => {
 
       await commentController.delete(mockReq, mockRes, mockNext);
 
-      expect(DeleteCommentDTO.validate).toHaveBeenCalledWith(validatedData);
-      expect(
-        commentController.commentService.deleteComment
-      ).toHaveBeenCalledWith(1, 'user123');
+      expect(DeleteCommentDTO.validate).toHaveBeenCalledWith({
+        id: parseInt(mockReq.params.id),
+        userId: mockReq.user.id,
+      });
       expect(mockRes.status).toHaveBeenCalledWith(204);
       expect(mockRes.send).toHaveBeenCalled();
     });
@@ -166,6 +169,62 @@ describe('CommentController', () => {
       ListCommentsDTO.validate.mockRejectedValue(error);
 
       await commentController.list(mockReq, mockRes, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('update', () => {
+    beforeEach(() => {
+      mockReq = {
+        params: { id: '1' },
+        body: { content: 'Updated comment' },
+        user: { id: 'user123' },
+      };
+    });
+
+    it('should update a comment successfully', async () => {
+      const validatedData = {
+        id: 1,
+        content: 'Updated comment',
+        userId: 'user123',
+      };
+
+      const serviceResponse = {
+        id: 1,
+        content: 'Updated comment',
+        userId: 'user123',
+        updatedAt: new Date(),
+      };
+
+      UpdateCommentDTO.validate.mockResolvedValue(validatedData);
+      commentController.commentService.updateComment.mockResolvedValue(
+        serviceResponse
+      );
+
+      await commentController.update(mockReq, mockRes, mockNext);
+
+      expect(UpdateCommentDTO.validate).toHaveBeenCalledWith({
+        id: parseInt(mockReq.params.id),
+        content: mockReq.body.content,
+        userId: mockReq.user.id,
+      });
+      expect(
+        commentController.commentService.updateComment
+      ).toHaveBeenCalledWith(
+        validatedData.id,
+        validatedData.content,
+        validatedData.userId
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith(serviceResponse);
+    });
+
+    it('should handle errors through next middleware', async () => {
+      const error = new Error('Comment not found');
+      UpdateCommentDTO.validate.mockRejectedValue(error);
+
+      await commentController.update(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });

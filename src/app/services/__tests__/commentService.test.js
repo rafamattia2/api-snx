@@ -124,8 +124,25 @@ describe('CommentService', () => {
     it('should list comments with pagination', async () => {
       const page = 1;
       const limit = 10;
-      const mockComments = [mockComment];
       const mockCount = 1;
+      const mockComments = [
+        {
+          id: 1,
+          content: 'Test Comment',
+          postId: 1,
+          userId: 'userId123',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          toJSON: () => ({
+            id: 1,
+            content: 'Test Comment',
+            postId: 1,
+            userId: 'userId123',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+      ];
 
       getModels.mockReturnValue({
         Comment: {
@@ -134,32 +151,62 @@ describe('CommentService', () => {
             rows: mockComments,
           }),
         },
+        Post: {
+          findByPk: vi.fn().mockResolvedValue({
+            id: 1,
+            title: 'Test Post',
+            content: 'Test Content',
+          }),
+        },
         User: {
           findById: vi.fn().mockResolvedValue(mockUser),
         },
       });
 
       pagination.createPaginatedResponse.mockReturnValue({
-        data: mockComments,
-        pagination: {
-          total: mockCount,
-          currentPage: page,
-          totalPages: 1,
-        },
+        comments: mockComments.map((comment) => ({
+          id: comment.id,
+          content: comment.content,
+          postId: comment.postId,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          user: {
+            id: mockUser._id,
+            name: mockUser.name,
+            username: mockUser.username,
+          },
+        })),
+        total: mockCount,
+        currentPage: page,
+        totalPages: Math.ceil(mockCount / limit),
       });
 
       const result = await commentService.listComments(1, page, limit);
 
-      expect(result.data).toBeDefined();
-      expect(result.pagination).toBeDefined();
+      expect(result.comments).toBeDefined();
+      expect(result.total).toBe(mockCount);
+      expect(result.currentPage).toBe(page);
+      expect(result.totalPages).toBe(Math.ceil(mockCount / limit));
+
+      expect(getModels().Post.findByPk).toHaveBeenCalledWith(1);
+      expect(getModels().Comment.findAndCountAll).toHaveBeenCalled();
+      expect(getModels().User.findById).toHaveBeenCalled();
+      expect(pagination.createPaginatedResponse).toHaveBeenCalled();
     });
 
     it('should handle errors when fetching comments', async () => {
+      const error = new Error('Database error');
+
       getModels.mockReturnValue({
         Comment: {
-          findAndCountAll: vi
-            .fn()
-            .mockRejectedValue(new Error('Database error')),
+          findAndCountAll: vi.fn().mockRejectedValue(error),
+        },
+        Post: {
+          findByPk: vi.fn().mockResolvedValue({
+            id: 1,
+            title: 'Test Post',
+            content: 'Test Content',
+          }),
         },
       });
 
@@ -214,6 +261,77 @@ describe('CommentService', () => {
 
       await expect(
         commentService.deleteComment(1, 'userId123')
+      ).rejects.toThrow(UnauthorizedError);
+    });
+  });
+
+  describe('updateComment', () => {
+    it('deve atualizar o comentário com sucesso', async () => {
+      const mockUpdatedComment = {
+        id: 1,
+        content: 'Comentário Atualizado',
+        postId: 1,
+        userId: 'userId123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        update: vi.fn(),
+      };
+
+      getModels.mockReturnValue({
+        Comment: {
+          findByPk: vi.fn().mockResolvedValue(mockUpdatedComment),
+        },
+        User: {
+          findById: vi.fn().mockResolvedValue(mockUser),
+        },
+      });
+
+      const result = await commentService.updateComment(
+        1,
+        'Comentário Atualizado',
+        'userId123'
+      );
+
+      expect(result).toEqual({
+        id: mockUpdatedComment.id,
+        content: mockUpdatedComment.content,
+        postId: mockUpdatedComment.postId,
+        createdAt: mockUpdatedComment.createdAt,
+        updatedAt: mockUpdatedComment.updatedAt,
+        user: {
+          id: mockUser._id,
+          name: mockUser.name,
+          username: mockUser.username,
+        },
+      });
+    });
+
+    it('deve lançar NotFoundError quando o comentário não existe', async () => {
+      getModels.mockReturnValue({
+        Comment: {
+          findByPk: vi.fn().mockResolvedValue(null),
+        },
+      });
+
+      await expect(
+        commentService.updateComment(999, 'Comentário Atualizado', 'userId123')
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('deve lançar UnauthorizedError quando o usuário não é o dono do comentário', async () => {
+      const mockComment = {
+        id: 1,
+        userId: 'differentUserId',
+      };
+
+      getModels.mockReturnValue({
+        Comment: {
+          findByPk: vi.fn().mockResolvedValue(mockComment),
+        },
+      });
+
+      await expect(
+        commentService.updateComment(1, 'Comentário Atualizado', 'userId123')
       ).rejects.toThrow(UnauthorizedError);
     });
   });

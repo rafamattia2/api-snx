@@ -172,4 +172,113 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('updateUser', () => {
+    it('deve atualizar o usuário com sucesso', async () => {
+      const userData = {
+        name: 'Nome Atualizado',
+        username: 'novousername',
+      };
+
+      const mockUpdatedUser = {
+        _id: 'userId123',
+        name: 'Nome Atualizado',
+        username: 'novousername',
+      };
+
+      userService.requestUser = { id: 'userId123' };
+
+      getModels.mockReturnValue({
+        User: {
+          findById: vi.fn().mockResolvedValue(mockUser),
+          findOne: vi.fn().mockResolvedValue(null),
+          findByIdAndUpdate: vi.fn().mockResolvedValue(mockUpdatedUser),
+        },
+      });
+
+      const result = await userService.updateUser('userId123', userData);
+
+      expect(result.user).toEqual({
+        id: mockUpdatedUser._id,
+        name: mockUpdatedUser.name,
+        username: mockUpdatedUser.username,
+      });
+    });
+
+    it('deve lançar UnauthorizedError quando tentar atualizar outro usuário', async () => {
+      userService.requestUser = { id: 'differentUserId' };
+
+      getModels.mockReturnValue({
+        User: {
+          findById: vi.fn().mockResolvedValue(mockUser),
+        },
+      });
+
+      await expect(
+        userService.updateUser('userId123', { name: 'Novo Nome' })
+      ).rejects.toThrow(UnauthorizedError);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('deve deletar o usuário com sucesso', async () => {
+      getModels.mockReturnValue({
+        User: {
+          findById: vi.fn().mockResolvedValue(mockUser),
+          findByIdAndDelete: vi.fn().mockResolvedValue(true),
+        },
+      });
+
+      const result = await userService.deleteUser('userId123');
+
+      expect(result.message).toBe('User deleted successfully');
+    });
+
+    it('deve lançar NotFoundError quando o usuário não existe', async () => {
+      getModels.mockReturnValue({
+        User: {
+          findById: vi.fn().mockResolvedValue(null),
+        },
+      });
+
+      await expect(userService.deleteUser('nonexistentId')).rejects.toThrow(
+        NotFoundError
+      );
+    });
+  });
+
+  describe('listUsers', () => {
+    it('deve listar usuários com paginação', async () => {
+      const mockUsers = [
+        {
+          _id: 'userId123',
+          name: 'Test User',
+          username: 'testuser',
+        },
+      ];
+
+      getModels.mockReturnValue({
+        User: {
+          countDocuments: vi.fn().mockResolvedValue(1),
+          find: vi.fn().mockReturnValue({
+            skip: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                select: vi.fn().mockResolvedValue(mockUsers),
+              }),
+            }),
+          }),
+        },
+      });
+
+      const result = await userService.listUsers(1, 10);
+
+      expect(result.users).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.users[0]).toEqual({
+        id: mockUsers[0]._id,
+        name: mockUsers[0].name,
+        username: mockUsers[0].username,
+      });
+    });
+  });
 });
