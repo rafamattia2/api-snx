@@ -145,6 +145,14 @@ Input validation is handled using [Yup](https://www.npmjs.com/package/yup) schem
 
 ### Testing with Postman
 
+To test the API endpoints using Postman:
+
+1. Download the `api-snx-postman.json` file from the repository
+2. Open Postman
+3. Click on "Import" button
+4. Drag and drop the JSON file or browse to select it
+5. All endpoints will be imported with pre-configured requests
+
 [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://rafadev-4523.postman.co/workspace/2a2adf42-be63-45e9-a56e-619634f9d932/overview)
 
 ### Quick Start Guide
