@@ -1,13 +1,18 @@
 import * as yup from 'yup';
 
-export class DeleteCommentDTO {
+export class UpdateCommentDTO {
   constructor(data) {
     this.id = data.id;
+    this.content = data.content;
     this.userId = data.userId;
   }
 
   static schema = yup.object().shape({
     id: yup.number().required('Comment ID is required'),
+    content: yup
+      .string()
+      .required('Content is required')
+      .min(1, 'Content cannot be empty'),
     userId: yup.string().required('User ID is required'),
   });
 
@@ -16,6 +21,6 @@ export class DeleteCommentDTO {
       abortEarly: false,
       stripUnknown: true,
     });
-    return new DeleteCommentDTO(validatedData);
+    return new UpdateCommentDTO(validatedData);
   }
 }

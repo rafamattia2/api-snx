@@ -126,4 +126,41 @@ export class CommentService {
 
     await comment.destroy();
   }
+
+  async updateComment(id, content, userId) {
+    try {
+      const { Comment, User } = getModels();
+      const comment = await Comment.findByPk(id);
+
+      if (!comment) {
+        throw new NotFoundError('Comment not found');
+      }
+
+      if (comment.userId.toString() !== userId.toString()) {
+        throw new UnauthorizedError('Not authorized to update this comment');
+      }
+
+      await comment.update({ content });
+
+      const user = await User.findById(userId);
+
+      return {
+        id: comment.id,
+        content: comment.content,
+        postId: comment.postId,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        user: {
+          id: user._id,
+          name: user.name,
+          username: user.username,
+        },
+      };
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError(`Error updating comment: ${error.message}`, 500);
+    }
+  }
 }

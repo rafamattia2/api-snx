@@ -11,6 +11,7 @@ router.post(
   commentController.create
 );
 router.get('/posts/:postId/comments', authMiddleware, commentController.list);
+router.put('/comments/:id', authMiddleware, commentController.update);
 router.delete('/comments/:id', authMiddleware, commentController.delete);
 
 export default router;

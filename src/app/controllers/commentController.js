@@ -2,6 +2,7 @@ import {
   CreateCommentDTO,
   DeleteCommentDTO,
   ListCommentsDTO,
+  UpdateCommentDTO,
 } from '../dtos/comment/index.js';
 
 import { CommentService } from '../services/commentService.js';
@@ -15,7 +16,7 @@ export class CommentController {
       const commentData = await CreateCommentDTO.validate({
         content: req.body.content,
         postId: parseInt(req.params.postId),
-        userId: req.userId,
+        userId: req.user.id,
       });
 
       const comment = await this.commentService.createComment(commentData);
@@ -29,7 +30,7 @@ export class CommentController {
     try {
       const deleteData = await DeleteCommentDTO.validate({
         id: parseInt(req.params.id),
-        userId: req.userId,
+        userId: req.user.id,
       });
 
       await this.commentService.deleteComment(deleteData.id, deleteData.userId);
@@ -51,6 +52,26 @@ export class CommentController {
         listData.page,
         listData.limit
       );
+      return res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  update = async (req, res, next) => {
+    try {
+      const updateData = await UpdateCommentDTO.validate({
+        id: parseInt(req.params.id),
+        content: req.body.content,
+        userId: req.user.id,
+      });
+
+      const result = await this.commentService.updateComment(
+        updateData.id,
+        updateData.content,
+        updateData.userId
+      );
+
       return res.status(200).json(result);
     } catch (error) {
       next(error);

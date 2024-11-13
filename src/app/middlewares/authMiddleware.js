@@ -18,7 +18,6 @@ export const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, authConfig.jwt.secret);
 
-    // Adiciona o usuário decodificado à requisição
     req.user = {
       id: decoded.id,
       username: decoded.username,
