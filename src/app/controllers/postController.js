@@ -7,8 +7,8 @@ import {
 import postService from '../services/postService.js';
 
 export class PostController {
-  constructor(postService) {
-    postService = postService;
+  constructor(service) {
+    this.postService = service;
   }
 
   async create(req, res, next) {
@@ -18,7 +18,7 @@ export class PostController {
         userId: req.userId,
       });
 
-      const post = await postService.createPost(postData);
+      const post = await this.postService.createPost(postData);
       return res.status(201).json(post);
     } catch (error) {
       next(error);
@@ -33,7 +33,7 @@ export class PostController {
         userId: req.userId,
       });
 
-      const post = await postService.updatePost(
+      const post = await this.postService.updatePost(
         updateData.id,
         updateData,
         updateData.userId
@@ -51,7 +51,7 @@ export class PostController {
         userId: req.userId,
       });
 
-      await postService.deletePost(deleteData.id, deleteData.userId);
+      await this.postService.deletePost(deleteData.id, deleteData.userId);
       return res.status(204).send();
     } catch (error) {
       next(error);
@@ -61,7 +61,7 @@ export class PostController {
   async list(req, res, next) {
     try {
       const { page, limit } = await ListPostsDTO.validate(req.query);
-      const posts = await postService.listPosts(page, limit);
+      const posts = await this.postService.listPosts(page, limit);
       return res.status(200).json(posts);
     } catch (error) {
       next(error);
@@ -75,7 +75,7 @@ export class PostController {
         return res.status(400).json({ message: 'Invalid post ID' });
       }
 
-      const post = await postService.getById(id);
+      const post = await this.postService.getById(id);
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
       }

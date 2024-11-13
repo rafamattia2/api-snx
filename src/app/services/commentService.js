@@ -1,8 +1,6 @@
 import { getModels } from '../models/index.js';
 import pagination from '../utils/pagination.js';
 import {
-  ConflictError,
-  ValidationError,
   UnauthorizedError,
   NotFoundError,
   AppError,
@@ -50,6 +48,9 @@ const commentService = {
 
       return response;
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new AppError(`Error creating comment: ${error.message}`);
     }
   },
